@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<JUCERPROJECT id="xOjVeD" name="simple_sampler" projectType="guiapp" version="1.0.0"
+              bundleIdentifier="com.juce.simple_sampler" includeBinaryInAppConfig="1"
+              jucerVersion="4.3.0">
+  <MAINGROUP id="mJmaOA" name="simple_sampler">
+    <GROUP id="{790A09F6-FBDC-A1CC-98E7-F6E7DAA0EDDC}" name="Resources">
+      <FILE id="c8fDXD" name="Tranche1.aif" compile="0" resource="1" file="Source/kit1/Tranche1.aif"/>
+      <FILE id="ji6NRm" name="Tranche2.aif" compile="0" resource="1" file="Source/kit1/Tranche2.aif"/>
+      <FILE id="Djcqqy" name="Tranche3.aif" compile="0" resource="1" file="Source/kit1/Tranche3.aif"/>
+      <FILE id="L2nrFQ" name="Tranche4.aif" compile="0" resource="1" file="Source/kit1/Tranche4.aif"/>
+      <FILE id="ZEtFEr" name="Tranche5.aif" compile="0" resource="1" file="Source/kit1/Tranche5.aif"/>
+      <FILE id="gWTfh0" name="Tranche6.aif" compile="0" resource="1" file="Source/kit1/Tranche6.aif"/>
+      <FILE id="O2PxWY" name="Tranche7.aif" compile="0" resource="1" file="Source/kit1/Tranche7.aif"/>
+      <FILE id="uhYFDp" name="Tranche8.aif" compile="0" resource="1" file="Source/kit1/Tranche8.aif"/>
+    </GROUP>
+    <GROUP id="{44D55BF1-64B4-5A3C-FA95-89DB54036647}" name="Source">
+      <FILE id="S6Zyh2" name="Main.cpp" compile="1" resource="0" file="Source/Main.cpp"/>
+      <FILE id="xWZV1S" name="MainComponent.h" compile="0" resource="0" file="Source/MainComponent.h"/>
+    </GROUP>
+  </MAINGROUP>
+  <EXPORTFORMATS>
+    <XCODE_MAC targetFolder="Builds/MacOSX">
+      <CONFIGURATIONS>
+        <CONFIGURATION name="Debug" osxSDK="default" osxCompatibility="10.9 SDK" osxArchitecture="default"
+                       isDebug="1" optimisation="1" targetName="MPEIntroduction"/>
+        <CONFIGURATION name="Release" osxSDK="default" osxCompatibility="10.9 SDK" osxArchitecture="default"
+                       isDebug="0" optimisation="3" targetName="MPEIntroduction"/>
+      </CONFIGURATIONS>
+      <MODULEPATHS>
+        <MODULEPATH id="juce_core" path="../JUCE/modules"/>
+        <MODULEPATH id="juce_events" path="../JUCE/modules"/>
+        <MODULEPATH id="juce_graphics" path="../JUCE/modules"/>
+        <MODULEPATH id="juce_data_structures" path="../JUCE/modules"/>
+        <MODULEPATH id="juce_gui_basics" path="../JUCE/modules"/>
+        <MODULEPATH id="juce_gui_extra" path="../JUCE/modules"/>
+        <MODULEPATH id="juce_cryptography" path="../JUCE/modules"/>
+        <MODULEPATH id="juce_video" path="../JUCE/modules"/>
+        <MODULEPATH id="juce_opengl" path="../JUCE/modules"/>
+        <MODULEPATH id="juce_audio_basics" path="../JUCE/modules"/>
+        <MODULEPATH id="juce_audio_devices" path="../JUCE/modules"/>
+        <MODULEPATH id="juce_audio_formats" path="../JUCE/modules"/>
+        <MODULEPATH id="juce_audio_processors" path="../JUCE/modules"/>
+        <MODULEPATH id="juce_audio_utils" path="../JUCE/modules"/>
+      </MODULEPATHS>
+    </XCODE_MAC>
+  </EXPORTFORMATS>
+  <MODULES>
+    <MODULE id="juce_audio_basics" showAllCode="1" useLocalCopy="0"/>
+    <MODULE id="juce_audio_devices" showAllCode="1" useLocalCopy="0"/>
+    <MODULE id="juce_audio_formats" showAllCode="1" useLocalCopy="0"/>
+    <MODULE id="juce_audio_processors" showAllCode="1" useLocalCopy="0"/>
+    <MODULE id="juce_audio_utils" showAllCode="1" useLocalCopy="0"/>
+    <MODULE id="juce_core" showAllCode="1" useLocalCopy="0"/>
+    <MODULE id="juce_cryptography" showAllCode="1" useLocalCopy="0"/>
+    <MODULE id="juce_data_structures" showAllCode="1" useLocalCopy="0"/>
+    <MODULE id="juce_events" showAllCode="1" useLocalCopy="0"/>
+    <MODULE id="juce_graphics" showAllCode="1" useLocalCopy="0"/>
+    <MODULE id="juce_gui_basics" showAllCode="1" useLocalCopy="0"/>
+    <MODULE id="juce_gui_extra" showAllCode="1" useLocalCopy="0"/>
+    <MODULE id="juce_opengl" showAllCode="1" useLocalCopy="0"/>
+    <MODULE id="juce_video" showAllCode="1" useLocalCopy="0"/>
+  </MODULES>
+  <JUCEOPTIONS/>
+</JUCERPROJECT>
