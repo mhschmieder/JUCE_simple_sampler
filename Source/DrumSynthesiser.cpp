@@ -51,18 +51,15 @@ void DrumSynthesiser::loadSound()
         
         clearSounds();
         
-        audioReader[0]=aiffFormat.createReaderFor (new MemoryInputStream(BinaryData::Tranche1_aif,BinaryData::Tranche1_aifSize,false),true);
-        audioReader[1]=aiffFormat.createReaderFor (new MemoryInputStream(BinaryData::Tranche2_aif,BinaryData::Tranche2_aifSize,false),true);
-        audioReader[2]=aiffFormat.createReaderFor (new MemoryInputStream(BinaryData::Tranche3_aif,BinaryData::Tranche3_aifSize,false),true);
-        audioReader[3]=aiffFormat.createReaderFor (new MemoryInputStream(BinaryData::Tranche4_aif,BinaryData::Tranche4_aifSize,false),true);
-        audioReader[4]=aiffFormat.createReaderFor (new MemoryInputStream(BinaryData::Tranche5_aif,BinaryData::Tranche5_aifSize,false),true);
-        audioReader[5]=aiffFormat.createReaderFor (new MemoryInputStream(BinaryData::Tranche6_aif,BinaryData::Tranche6_aifSize,false),true);
-        audioReader[6]=aiffFormat.createReaderFor (new MemoryInputStream(BinaryData::Tranche7_aif,BinaryData::Tranche7_aifSize,false),true);
-        audioReader[7]=aiffFormat.createReaderFor (new MemoryInputStream(BinaryData::Tranche8_aif,BinaryData::Tranche8_aifSize,false),true);
+
+        int dataSizeInBytes;
         
         for (int indice=0;indice<8;indice++)
         {
 
+            const char* ressource=BinaryData::getNamedResource (BinaryData::namedResourceList[indice], dataSizeInBytes);
+            
+            audioReader[indice]=aiffFormat.createReaderFor (new MemoryInputStream(ressource,dataSizeInBytes,false),true);
             Notes.setRange(indice+base_note,1, true);
             samplemap[indice]=new CustomSamplerSound(std::to_string(indice),*audioReader[indice],Notes,indice+base_note,0.001, 0.1,10.0);
             addSound(samplemap[indice]);
