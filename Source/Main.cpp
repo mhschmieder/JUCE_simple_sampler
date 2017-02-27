@@ -25,20 +25,24 @@
 
 #include "../JuceLibraryCode/JuceHeader.h"
 #include <array>
+#include "DrumSynthesiser.h"
 
 
-struct MPETestClasses
+
+struct Simple_Sampler_Classes
 {
-    #include "MainComponent.h"
+  
+    #include "MainComponent.h" 
+    
 };
 
 
 //==============================================================================
-class MPETestApplication  : public JUCEApplication
+class Simple_Sampler_Application  : public JUCEApplication
 {
 public:
     //==============================================================================
-    MPETestApplication() {}
+    Simple_Sampler_Application() {}
 
     const String getApplicationName() override       { return ProjectInfo::projectName; }
     const String getApplicationVersion() override    { return ProjectInfo::versionString; }
@@ -68,7 +72,7 @@ public:
             : DocumentWindow (name, Colours::lightgrey, DocumentWindow::allButtons)
         {
             setUsingNativeTitleBar (true);
-            setContentOwned (new MPETestClasses::MainComponent(), true);
+            setContentOwned (new Simple_Sampler_Classes::MainComponent(), true);
 
             setResizable (true, false);
             centreWithSize (getWidth(), getHeight());
@@ -89,4 +93,4 @@ private:
 };
 
 //==============================================================================
-START_JUCE_APPLICATION (MPETestApplication)
+START_JUCE_APPLICATION (Simple_Sampler_Application)

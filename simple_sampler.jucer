@@ -15,6 +15,13 @@
       <FILE id="uhYFDp" name="Tranche8.aif" compile="0" resource="1" file="Source/kit1/Tranche8.aif"/>
     </GROUP>
     <GROUP id="{44D55BF1-64B4-5A3C-FA95-89DB54036647}" name="Source">
+      <FILE id="wFt6II" name="CustomSampler.cpp" compile="1" resource="0"
+            file="Source/CustomSampler.cpp"/>
+      <FILE id="B59O24" name="CustomSampler.h" compile="0" resource="0" file="Source/CustomSampler.h"/>
+      <FILE id="P1hciv" name="DrumSynthesiser.cpp" compile="1" resource="0"
+            file="Source/DrumSynthesiser.cpp"/>
+      <FILE id="tlccVx" name="DrumSynthesiser.h" compile="0" resource="0"
+            file="Source/DrumSynthesiser.h"/>
       <FILE id="S6Zyh2" name="Main.cpp" compile="1" resource="0" file="Source/Main.cpp"/>
       <FILE id="xWZV1S" name="MainComponent.h" compile="0" resource="0" file="Source/MainComponent.h"/>
     </GROUP>
