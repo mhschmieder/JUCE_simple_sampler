@@ -14,6 +14,7 @@
 #include "../JuceLibraryCode/JuceHeader.h"
 #include "CustomSampler.h"
 
+
 //==============================================================================
 /*
 */
@@ -23,12 +24,12 @@ public:
     DrumSynthesiser();
     ~DrumSynthesiser();
     
-    void loadSound();
     CustomSamplerSound *samplemap[8];
-
-    
+    float getCurrentPosition(int midiRootNote);
+  
 private:
 
+    int nb_samples;
     double sampleRate;
     uint32 lastNoteOnCounter;
     int minimumSubBlockSize;
@@ -38,6 +39,8 @@ private:
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (DrumSynthesiser)
 };
+
+
 
 
 #endif  // DRUMSYNTHESISER_H_INCLUDED

@@ -27,18 +27,20 @@
 #define MAINCOMPONENT_H_INCLUDED
 
 
+//==============================================================================
+
+
 class MainComponent : public Component,
                       private AudioIODeviceCallback,  // [1]
-                    private MidiInputCallback,
-                    public Slider::Listener
+                      private MidiInputCallback,
+                      public MidiKeyboardStateListener
 {
 public:
     //==============================================================================
     MainComponent()
-        : audioSetupComp (audioDeviceManager, 0, 0, 0, 256,
-                          true, // showMidiInputOptions must be true
-                          false, true, false),
-           keyboardComponent (keyboardState, MidiKeyboardComponent::horizontalKeyboard)
+        :keyboardComponent (keyboardState, MidiKeyboardComponent::horizontalKeyboard),
+       tabs(TabbedButtonBar::TabsAtTop),
+    isAddingFromMidiInput (false)
     {
         
         setSize (650, 560);
@@ -48,45 +50,43 @@ public:
         audioDeviceManager.addAudioCallback (this);
         const StringArray midiInputs (MidiInput::getDevices());
         audioDeviceManager.setMidiInputEnabled(midiInputs[0],true);
-        addAndMakeVisible (audioSetupComp);
         addAndMakeVisible (keyboardComponent);
+        keyboardState.addListener (this);
         addAndMakeVisible (midinote_label);
-        
-
-        
-        for (int indice=0;indice<8;indice++)
-        {
-            addAndMakeVisible (pitchSlider[indice]);
-            pitchSlider[indice].setRange(-24,24);
-            pitchSlider[indice].addListener(this);
-        }
-        
+        addAndMakeVisible (tabs);
         midinote_label.setText("None",dontSendNotification);
+        
+        tabs.addTab ("Kit", Colours::lightgrey, new KitPage(synth),true);
+        tabs.addTab ("Sample", Colours::lightgrey, new SamplerPage(synth),true);
+        tabs.addTab ("FX", Colours::lightgrey, new EffectPage(synth),true);
+        tabs.addTab ("Devices", Colours::lightgrey, new AudioDeviceSelectorComponent(audioDeviceManager, 0, 0, 0, 256, true,false, true, false),true);
+
+
     }
 
     ~MainComponent()
     {
+        audioDeviceManager.removeAudioCallback (this);
+        keyboardState.removeListener (this);
         audioDeviceManager.removeMidiInputCallback (String(), this);
     }
+
 
     //==============================================================================
     void resized() override
     {
         //Rectangle<int> r (getLocalBounds());
         //audioSetupComp.setBounds (r);
+        int offset=8;
         
-        keyboardComponent.setBounds (8, 10, getWidth() - 16, 64);
-        
-        midinote_label.setBounds (8, 100, getWidth() - 16, 20);
-        
-        for (int indice=0;indice<8;indice++)
-        {
-           pitchSlider[indice].setBounds (8, 130+30*indice, getWidth() - 16, 20);
-        }
-        
+        tabs.setBounds (offset,offset,getWidth()-2*offset,getHeight()-64-2*offset);
+        keyboardComponent.setBounds (offset, getHeight()-64, getWidth() -2*offset, 64);
+        midinote_label.setBounds (offset, 100, getWidth() -2*offset, 20);
+        repaint();
         
     }
-
+    
+        
     //==============================================================================
     void audioDeviceIOCallback (const float** /*inputChannelData*/, int /*numInputChannels*/,
                                 float** outputChannelData, int numOutputChannels,
@@ -98,8 +98,6 @@ public:
         // clear it to silence
         buffer.clear();
         MidiBuffer incomingMidi;
-        
-        // get the MIDI messages for this audio block
         midiCollector.removeNextBlockOfMessages (incomingMidi, numSamples);
         synth.renderNextBlock (buffer, incomingMidi, 0, numSamples);
     }
@@ -108,54 +106,64 @@ public:
     {
         const double sampleRate = device->getCurrentSampleRate();
         midiCollector.reset (sampleRate);
-        synth.setCurrentPlaybackSampleRate (sampleRate);
+        synth.setCurrentPlaybackSampleRate(sampleRate);
     }
 
     void audioDeviceStopped() override
     {
     }
     
-   
-    
-    void sliderValueChanged (Slider* slider) override
-    {
-        for (int indice=0;indice<8;indice++)
-        {
-            if (slider == &(pitchSlider[indice]))
-                {
-                    int pitch=pitchSlider[indice].getValue();
-                    synth.samplemap[indice]->detune=pitch;
-                    
-                }
-        }
-    }
- 
+
 
 private:
     //==============================================================================
     void handleIncomingMidiMessage (MidiInput* /*source*/,
                                     const MidiMessage& message) override
     {
+        const ScopedValueSetter<bool> scopedInputFlag (isAddingFromMidiInput, true);
         keyboardState.processNextMidiEvent (message);
         midiCollector.addMessageToQueue (message);
         //midinote_label.setText(message.getDescription(),dontSendNotification);
     }
-
+    
+    void handleNoteOn (MidiKeyboardState*, int midiChannel, int midiNoteNumber, float velocity) override
+    {
+        if (! isAddingFromMidiInput)
+        {
+            MidiMessage message (MidiMessage::noteOn (midiChannel, midiNoteNumber, velocity));
+            message.setTimeStamp (Time::getMillisecondCounterHiRes() * 0.001);
+            midiCollector.addMessageToQueue (message);
+        }
+    }
+    
+    void handleNoteOff (MidiKeyboardState*, int midiChannel, int midiNoteNumber, float /*velocity*/) override
+    {
+        if (! isAddingFromMidiInput)
+        {
+            MidiMessage message (MidiMessage::noteOff (midiChannel, midiNoteNumber));
+            message.setTimeStamp (Time::getMillisecondCounterHiRes() * 0.001);
+            midiCollector.addMessageToQueue (message);
+        }
+    }
+    
+    
     //==============================================================================
     AudioDeviceManager audioDeviceManager;         // [3]
-    AudioDeviceSelectorComponent audioSetupComp;   // [4]
-    
     MidiKeyboardState keyboardState;
     MidiKeyboardComponent keyboardComponent;
-    
     DrumSynthesiser synth;
-    MidiMessageCollector midiCollector;            // [5]
-    
+    MidiMessageCollector midiCollector;
     Label midinote_label;
-    Slider pitchSlider[8];
+ 
+    TabbedComponent tabs;
+    bool isAddingFromMidiInput;
+
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MainComponent)
 };
+
+
+
 
 
 #endif  // MAINCOMPONENT_H_INCLUDED

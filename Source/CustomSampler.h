@@ -39,7 +39,6 @@ public:
      source, in seconds
      */
     CustomSamplerSound (const String& name,
-                  AudioFormatReader& source,
                   const BigInteger& midiNotes,
                   int midiNoteForNormalPitch,
                   double attackTimeSecs,
@@ -48,6 +47,10 @@ public:
     
     /** Destructor. */
     ~CustomSamplerSound();
+    IIRFilter* filterL;
+    IIRFilter* filterR;
+    
+    void setIIRCoef();
     
     //==============================================================================
     /** Returns the sample's name */
@@ -58,11 +61,22 @@ public:
      */
     AudioSampleBuffer* getAudioData() const noexcept        { return data; }
     
+    void loadSound(int index);
     
     //==============================================================================
     bool appliesToNote (int midiNoteNumber) override;
     bool appliesToChannel (int midiChannel) override;
+
+    
+    void setFilter();
     int detune;
+    int filter_type;
+    float filter_cutoff;
+    
+    AudioFormatManager formatManager; 
+    AudioThumbnailCache thumbnailCache;
+    AudioThumbnail thumbnail;
+    int midiRootNote;
     
 private:
     //==============================================================================
@@ -73,7 +87,10 @@ private:
     double sourceSampleRate;
     BigInteger midiNotes;
     int length, attackSamples, releaseSamples;
-    int midiRootNote;
+    
+
+
+    double attackTimeSecs, releaseTimeSecs, maxSampleLengthSeconds;
     
     JUCE_LEAK_DETECTOR (CustomSamplerSound)
 };
@@ -103,20 +120,24 @@ public:
     
     void startNote (int midiNoteNumber, float velocity, SynthesiserSound*, int pitchWheel) override;
     void stopNote (float velocity, bool allowTailOff) override;
-    
     void pitchWheelMoved (int newValue) override;
     void controllerMoved (int controllerNumber, int newValue) override;
-    
     void renderNextBlock (AudioSampleBuffer&, int startSample, int numSamples) override;
-    
+  
+    double sourceSamplePosition;
     
 private:
     //==============================================================================
     double pitchRatio;
-    double sourceSamplePosition;
+
     float lgain, rgain, attackReleaseLevel, attackDelta, releaseDelta;
     bool isInAttack, isInRelease;
-    
+
+
+    IIRFilter filterL;
+    IIRFilter filterR;
+
+
     JUCE_LEAK_DETECTOR (CustomSamplerVoice)
 };
 

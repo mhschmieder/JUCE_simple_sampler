@@ -2,7 +2,7 @@
 
 <JUCERPROJECT id="xOjVeD" name="simple_sampler" projectType="guiapp" version="1.0.0"
               bundleIdentifier="com.juce.simple_sampler" includeBinaryInAppConfig="1"
-              jucerVersion="4.3.0">
+              jucerVersion="4.3.1">
   <MAINGROUP id="mJmaOA" name="simple_sampler">
     <GROUP id="{790A09F6-FBDC-A1CC-98E7-F6E7DAA0EDDC}" name="Resources">
       <FILE id="c8fDXD" name="Tranche1.aif" compile="0" resource="1" file="Source/kit1/Tranche1.aif"/>
@@ -22,6 +22,10 @@
             file="Source/DrumSynthesiser.cpp"/>
       <FILE id="tlccVx" name="DrumSynthesiser.h" compile="0" resource="0"
             file="Source/DrumSynthesiser.h"/>
+      <FILE id="GiCWuI" name="FX.cpp" compile="1" resource="0" file="Source/FX.cpp"/>
+      <FILE id="SPwbwp" name="FX.h" compile="0" resource="0" file="Source/FX.h"/>
+      <FILE id="GssUj1" name="GUI.cpp" compile="1" resource="0" file="Source/GUI.cpp"/>
+      <FILE id="VlA6mD" name="GUI.h" compile="0" resource="0" file="Source/GUI.h"/>
       <FILE id="S6Zyh2" name="Main.cpp" compile="1" resource="0" file="Source/Main.cpp"/>
       <FILE id="xWZV1S" name="MainComponent.h" compile="0" resource="0" file="Source/MainComponent.h"/>
     </GROUP>

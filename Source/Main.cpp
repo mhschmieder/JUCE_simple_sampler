@@ -26,6 +26,7 @@
 #include "../JuceLibraryCode/JuceHeader.h"
 #include <array>
 #include "DrumSynthesiser.h"
+#include "GUI.h"
 
 
 
