@@ -24,19 +24,22 @@ public:
     DrumSynthesiser();
     ~DrumSynthesiser();
     
-    CustomSamplerSound *samplemap[8];
     float getCurrentPosition(int midiRootNote);
-  
+    int midiNoteNumber_playing;
+    void loadKit();
+    int current_sound;
+    int num_kit;
+    int nb_samples;
+
 private:
 
-    int nb_samples;
     double sampleRate;
     uint32 lastNoteOnCounter;
     int minimumSubBlockSize;
     bool subBlockSubdivisionIsStrict;
     bool shouldStealNotes;
     BigInteger sustainPedalsDown;
-    
+
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (DrumSynthesiser)
 };
 

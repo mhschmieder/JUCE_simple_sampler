@@ -16,41 +16,19 @@
  
  @see CustomSamplerVoice, Synthesiser, SynthesiserSound
  */
-class CustomSamplerSound    : public SynthesiserSound
+class CustomSamplerSound    : public SynthesiserSound, AsyncUpdater
 {
 public:
-    //==============================================================================
-    /** Creates a sampled sound from an audio reader.
-     
-     This will attempt to load the audio from the source into memory and store
-     it in this object.
-     
-     @param name         a name for the sample
-     @param source       the audio to load. This object can be safely deleted by the
-     caller after this constructor returns
-     @param midiNotes    the set of midi keys that this sound should be played on. This
-     is used by the SynthesiserSound::appliesToNote() method
-     @param midiNoteForNormalPitch   the midi note at which the sample should be played
-     with its natural rate. All other notes will be pitched
-     up or down relative to this one
-     @param attackTimeSecs   the attack (fade-in) time, in seconds
-     @param releaseTimeSecs  the decay (fade-out) time, in seconds
-     @param maxSampleLengthSeconds   a maximum length of audio to read from the audio
-     source, in seconds
-     */
+
     CustomSamplerSound (const String& name,
                   const BigInteger& midiNotes,
-                  int midiNoteForNormalPitch,
+                  int midiNoteNumber,
                   double attackTimeSecs,
                   double releaseTimeSecs,
                   double maxSampleLengthSeconds);
     
     /** Destructor. */
     ~CustomSamplerSound();
-    IIRFilter* filterL;
-    IIRFilter* filterR;
-    
-    void setIIRCoef();
     
     //==============================================================================
     /** Returns the sample's name */
@@ -61,23 +39,29 @@ public:
      */
     AudioSampleBuffer* getAudioData() const noexcept        { return data; }
     
-    void loadSound(int index);
+    void loadSound();
+    void loadThumbnail();
     
     //==============================================================================
     bool appliesToNote (int midiNoteNumber) override;
     bool appliesToChannel (int midiChannel) override;
-
+    void handleAsyncUpdate() override;
     
     void setFilter();
     int detune;
     int filter_type;
     float filter_cutoff;
+    int filter_active;
+    double sample_length;
+    float sample_start,sample_end;
+    int sample_index;
+    File audioFile;
     
     AudioFormatManager formatManager; 
     AudioThumbnailCache thumbnailCache;
     AudioThumbnail thumbnail;
     int midiRootNote;
-    
+
 private:
     //==============================================================================
     friend class CustomSamplerVoice;
@@ -88,8 +72,6 @@ private:
     BigInteger midiNotes;
     int length, attackSamples, releaseSamples;
     
-
-
     double attackTimeSecs, releaseTimeSecs, maxSampleLengthSeconds;
     
     JUCE_LEAK_DETECTOR (CustomSamplerSound)
@@ -124,15 +106,13 @@ public:
     void controllerMoved (int controllerNumber, int newValue) override;
     void renderNextBlock (AudioSampleBuffer&, int startSample, int numSamples) override;
   
-    double sourceSamplePosition;
+    double sourceSamplePosition,sourceSampleLength;
     
 private:
     //==============================================================================
     double pitchRatio;
-
     float lgain, rgain, attackReleaseLevel, attackDelta, releaseDelta;
     bool isInAttack, isInRelease;
-
 
     IIRFilter filterL;
     IIRFilter filterR;

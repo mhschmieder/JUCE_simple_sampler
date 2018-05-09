@@ -27,8 +27,7 @@
 #include <array>
 #include "DrumSynthesiser.h"
 #include "GUI.h"
-
-
+#include "CustomMidiKeyboardComponent.h"
 
 struct Simple_Sampler_Classes
 {
@@ -70,11 +69,10 @@ public:
     {
     public:
         MainWindow (String name)
-            : DocumentWindow (name, Colours::lightgrey, DocumentWindow::allButtons)
+        : DocumentWindow (name, Colour(90,90,90), DocumentWindow::allButtons)
         {
             setUsingNativeTitleBar (true);
             setContentOwned (new Simple_Sampler_Classes::MainComponent(), true);
-
             setResizable (true, false);
             centreWithSize (getWidth(), getHeight());
             setVisible (true);

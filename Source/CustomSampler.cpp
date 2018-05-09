@@ -9,15 +9,24 @@ CustomSamplerSound::CustomSamplerSound (const String& soundName,
 : detune(0),
 thumbnailCache (5),                            // [4]
 thumbnail (512, formatManager, thumbnailCache), // [5]
+midiRootNote (midiNoteForNormalPitch),
 name (soundName),
 midiNotes (notes),
-midiRootNote (midiNoteForNormalPitch),
 attackTimeSecs (attackTimeSecs),
 releaseTimeSecs(releaseTimeSecs),
 maxSampleLengthSeconds (maxSampleLengthSeconds)
 {
+    filter_active=0;
     filter_type=1;
     filter_cutoff=1000.0;
+    sample_start=0.;
+    sample_end=1.;
+    sourceSampleRate=44100;
+    sample_length=1;
+    formatManager.registerBasicFormats();
+    data = new AudioSampleBuffer (2, sample_length);
+    thumbnail.reset (2, sourceSampleRate,sample_length) ;
+    thumbnail.setSource(nullptr);
 }
 
 
@@ -25,18 +34,22 @@ CustomSamplerSound::~CustomSamplerSound()
 {
 }
 
-void CustomSamplerSound::loadSound(int index)
+void CustomSamplerSound::loadSound()
 {
+    AiffAudioFormat AIFF_file;
+    
+    
+    if (!audioFile.existsAsFile())
+    {
+        Logger::outputDebugString(String("does not exist")+audioFile.getFileName());
+    }
     ScopedPointer<AudioFormatReader> source;
-    int dataSizeInBytes;
-    AiffAudioFormat aiffFormat;
-    const char* ressource=BinaryData::getNamedResource (BinaryData::namedResourceList[index], dataSizeInBytes);
-    
-    source=aiffFormat.createReaderFor (new MemoryInputStream(ressource,dataSizeInBytes,false),true);
-    thumbnail.setReader(aiffFormat.createReaderFor(new MemoryInputStream(ressource,dataSizeInBytes,false),true),index);
+    source=AIFF_file.createReaderFor(audioFile.createInputStream(),false);
+ 
     sourceSampleRate = source->sampleRate;
+    sample_length=source->lengthInSamples;
     
-    if (sourceSampleRate <= 0 || source->lengthInSamples <= 0)
+    if (sourceSampleRate <= 0 || sample_length <= 0)
     {
         length = 0;
         attackSamples = 0;
@@ -49,20 +62,23 @@ void CustomSamplerSound::loadSound(int index)
         source->read (data, 0, length + 4, 0, true, true);
         attackSamples = roundToInt (attackTimeSecs * sourceSampleRate);
         releaseSamples = roundToInt (releaseTimeSecs * sourceSampleRate);
-        
     }
+    triggerAsyncUpdate();
     
 }
 
-void CustomSamplerSound::setFilter()
+void CustomSamplerSound::handleAsyncUpdate()
 {
-
-    
+    String filename=String::formatted("Async sample" +audioFile.getFullPathName());
+    Logger::outputDebugString(filename);
+    thumbnail.clear();
+    thumbnail.setSource(new FileInputSource (audioFile));
 }
+
 
 bool CustomSamplerSound::appliesToNote (int midiNoteNumber)
 {
-    return midiNotes [midiNoteNumber];
+    return midiNotes[midiNoteNumber];
 }
 
 bool CustomSamplerSound::appliesToChannel (int /*midiChannel*/)
@@ -74,8 +90,8 @@ bool CustomSamplerSound::appliesToChannel (int /*midiChannel*/)
 
 //==============================================================================
 CustomSamplerVoice::CustomSamplerVoice()
-: pitchRatio (0.0),
-sourceSamplePosition (0.0),
+:sourceSamplePosition (0.0),
+pitchRatio (0.0),
 lgain (0.0f), rgain (0.0f),
 attackReleaseLevel (0), attackDelta (0), releaseDelta (0),
 isInAttack (false), isInRelease (false)
@@ -98,12 +114,13 @@ void CustomSamplerVoice::startNote (const int midiNoteNumber,
                               SynthesiserSound* s,
                               const int /*currentPitchWheelPosition*/)
 {
+    
+
+    
+    
     if (CustomSamplerSound* sound = dynamic_cast<CustomSamplerSound*> (s))
     {
-
         
-        //setFilterCoef(sound->filter_type,sound->sourceSampleRate,sound->filter_cutoff);
-   
         IIRCoefficients coef;
         switch (sound->filter_type)
         {
@@ -117,15 +134,24 @@ void CustomSamplerVoice::startNote (const int midiNoteNumber,
                 coef=IIRCoefficients::makeBandPass(sound->sourceSampleRate,sound->filter_cutoff);
                 break;
         }
+        
+        if (sound->filter_active==0)
+        {
+            coef=IIRCoefficients(1,0,0,1,0,0);
+        }
+        
         filterR.setCoefficients(coef);
         filterL.setCoefficients(coef);
         filterR.reset();
         filterL.reset();
+
         
         pitchRatio = pow (2.0, (midiNoteNumber - sound->midiRootNote + sound->detune) / 12.0) * sound->sourceSampleRate / getSampleRate();
         
 
-        sourceSamplePosition = 0.0;
+        sourceSamplePosition = sound->sample_start * sound->sample_length;
+        sourceSampleLength= sound->sample_end * sound->sample_length;
+        
         lgain = velocity;
         rgain = velocity;
         
@@ -187,13 +213,14 @@ void CustomSamplerVoice::controllerMoved (const int /*controllerNumber*/,
 //==============================================================================
 void CustomSamplerVoice::renderNextBlock (AudioSampleBuffer& outputBuffer, int startSample, int numSamples)
 {
+
     
     if (const CustomSamplerSound* const playingSound = static_cast<CustomSamplerSound*> (getCurrentlyPlayingSound().get()))
     {
+
         const float* const inL = playingSound->data->getReadPointer (0);
         const float* const inR = playingSound->data->getNumChannels() > 1 ? playingSound->data->getReadPointer (1) : nullptr;
         
-
         float* outL = outputBuffer.getWritePointer (0, startSample);
         float* outR = outputBuffer.getNumChannels() > 1 ? outputBuffer.getWritePointer (1, startSample) : nullptr;
         
@@ -251,7 +278,7 @@ void CustomSamplerVoice::renderNextBlock (AudioSampleBuffer& outputBuffer, int s
             }
             sourceSamplePosition += pitchRatio;
             
-            if (sourceSamplePosition > playingSound->length)
+            if (sourceSamplePosition > sourceSampleLength)
             {
                 stopNote (0.0f,false);
                 break;

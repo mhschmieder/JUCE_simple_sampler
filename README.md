@@ -4,6 +4,11 @@ The goal of this project is to reproduce a drum sampler with the JUCE framework.
 
 As compared with the ableton drum rack, I would like to obtain a free Raspberry-pi3 standalone program. With a simple MIDI device plug to the Pi3, I expect to be able to obtain a cheap, portable drum sampler....no screen, no mouse, no keyboard...just a Pi3 and a midi device)
 
+## Demo
+
+[![Simple Sampler](screenshot.png)](https://www.youtube.com/watch?v=9EyX8Q5eSIo)
+
+
 ## Expected Functionalities
 
 * Standalone Drum Sampler with the following control for each sample

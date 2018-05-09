@@ -26,6 +26,7 @@
 #ifndef MAINCOMPONENT_H_INCLUDED
 #define MAINCOMPONENT_H_INCLUDED
 
+#include "../JuceLibraryCode/JuceHeader.h"
 
 //==============================================================================
 
@@ -33,57 +34,66 @@
 class MainComponent : public Component,
                       private AudioIODeviceCallback,  // [1]
                       private MidiInputCallback,
-                      public MidiKeyboardStateListener
+                      public MidiKeyboardStateListener,
+                      public URL::DownloadTask::Listener,
+                      private ComboBox::Listener
 {
 public:
     //==============================================================================
-    MainComponent()
-        :keyboardComponent (keyboardState, MidiKeyboardComponent::horizontalKeyboard),
+    MainComponent():
        tabs(TabbedButtonBar::TabsAtTop),
-    isAddingFromMidiInput (false)
+        progressbar(progress),
+        isAddingFromMidiInput (false),
+        keyboardComponent(keyboardState),
+        startTime (Time::getMillisecondCounterHiRes() * 0.001)
     {
         
-        setSize (650, 560);
+        setSize (800, 600);
 
         audioDeviceManager.initialise (0, 2, nullptr, true, String(), nullptr);
         audioDeviceManager.addMidiInputCallback (String(), this); // [6]
         audioDeviceManager.addAudioCallback (this);
         const StringArray midiInputs (MidiInput::getDevices());
         audioDeviceManager.setMidiInputEnabled(midiInputs[0],true);
-        addAndMakeVisible (keyboardComponent);
-        keyboardState.addListener (this);
         addAndMakeVisible (midinote_label);
         addAndMakeVisible (tabs);
+        
+        addAndMakeVisible (progressbar);
+        keyboardState.addListener (this);
+        
+        combobox_kit.addListener(this);
+        combobox_kit.addItem (String("Kit1"),1);
+        combobox_kit.addItem (String("Kit2"),2);
+        
+        addAndMakeVisible (combobox_kit);
+        
         midinote_label.setText("None",dontSendNotification);
         
-        tabs.addTab ("Kit", Colours::lightgrey, new KitPage(synth),true);
-        tabs.addTab ("Sample", Colours::lightgrey, new SamplerPage(synth),true);
-        tabs.addTab ("FX", Colours::lightgrey, new EffectPage(synth),true);
-        tabs.addTab ("Devices", Colours::lightgrey, new AudioDeviceSelectorComponent(audioDeviceManager, 0, 0, 0, 256, true,false, true, false),true);
-
+        Colour background_colour=Colour(141,141,141);
+        tabs.addTab ("Sample", background_colour, new SamplerPage(synth,&keyboardComponent),true);
+        tabs.addTab ("Devices", background_colour, new AudioDeviceSelectorComponent(audioDeviceManager, 0, 0, 0, 256, true,false, true, false),true);
 
     }
 
     ~MainComponent()
     {
         audioDeviceManager.removeAudioCallback (this);
-        keyboardState.removeListener (this);
         audioDeviceManager.removeMidiInputCallback (String(), this);
+  
+
+        //progressbar.removeComponentListener(this);
     }
 
 
     //==============================================================================
     void resized() override
     {
-        //Rectangle<int> r (getLocalBounds());
-        //audioSetupComp.setBounds (r);
         int offset=8;
-        
-        tabs.setBounds (offset,offset,getWidth()-2*offset,getHeight()-64-2*offset);
-        keyboardComponent.setBounds (offset, getHeight()-64, getWidth() -2*offset, 64);
-        midinote_label.setBounds (offset, 100, getWidth() -2*offset, 20);
+        tabs.setBounds (offset,offset,getWidth()-2*offset,getHeight()-2*offset);
+
+        combobox_kit.setBounds(getWidth()-300,8,90,20);
+        progressbar.setBounds(getWidth()-200,8,192,20);
         repaint();
-        
     }
     
         
@@ -92,10 +102,7 @@ public:
                                 float** outputChannelData, int numOutputChannels,
                                 int numSamples) override
     {
-        // make buffer
         AudioBuffer<float> buffer (outputChannelData, numOutputChannels, numSamples);
-        
-        // clear it to silence
         buffer.clear();
         MidiBuffer incomingMidi;
         midiCollector.removeNextBlockOfMessages (incomingMidi, numSamples);
@@ -113,51 +120,155 @@ public:
     {
     }
     
+    void download_kit(int num_kit){
+        
+        synth.num_kit=num_kit;
+        synth.nb_samples=8;
+        
+        File directory = File::getSpecialLocation (File::userApplicationDataDirectory).getChildFile (String::formatted ("kit%d/",num_kit));
+               
+        Logger::outputDebugString(directory.getFullPathName());
+        
+        
+        //add sample to combobox
+        
+        SamplerPage* samplerpage = static_cast<SamplerPage*> (tabs.getTabContentComponent(0));
+        samplerpage->samplecomboBox.comboBox.clear();
+        samplerpage->bankcomboBox.comboBox.clear();
+        
+        if (!directory.isDirectory())
+        {
+            directory.createDirectory();
+        }
+        
+        progress=0;
+        for (int index=1;index<=8;index++)
+        {
+            File audioFile = File::getSpecialLocation (File::userApplicationDataDirectory).getChildFile (String::formatted ("kit%d/mysample%d.aif",num_kit,index));
+            
+            Logger::outputDebugString(audioFile.getFullPathName());
+            
+            if (!audioFile.exists())
+            {
+                //If file does not exist -> download file
+                URL url=URL::URL(String::formatted ("https://s3-eu-west-1.amazonaws.com/choqueuse/drumheaven/kit%d/Tranche%d.aif",num_kit, index));
+                InputStream* test= url.createInputStream(1);
+                if (test != nullptr)
+                {
+                    Logger::outputDebugString("Load Downloaded File");
+                    tache[index-1]=url.downloadToFile(audioFile,"",this);
+                }
+                else
+                {
+                    Logger::outputDebugString("The file does not exist and no Internet connection is available");
+                }
+            }
+            else
+            {
+                progress=1;
+                //load kit directly
+                Logger::outputDebugString("Sample are already available");
+                synth.loadKit();
+            }
+            
 
+         // add item
+        samplerpage->samplecomboBox.comboBox.addItem(audioFile.getFileName(),index);
+        samplerpage->bankcomboBox.comboBox.addItem(String::formatted("Pad %d",index),index);
+            
+        }
+        
+    }
+
+    void comboBoxChanged(ComboBox* combobox) override
+    {
+
+        if (combobox==&combobox_kit)
+        {
+            progress=0.;
+            download_kit(1);
+        }
+    }
+        
+    URL::DownloadTask *tache[8];
 
 private:
     //==============================================================================
-    void handleIncomingMidiMessage (MidiInput* /*source*/,
-                                    const MidiMessage& message) override
+    void handleIncomingMidiMessage (MidiInput* /*source*/,const MidiMessage& message) override
     {
+        
         const ScopedValueSetter<bool> scopedInputFlag (isAddingFromMidiInput, true);
         keyboardState.processNextMidiEvent (message);
-        midiCollector.addMessageToQueue (message);
-        //midinote_label.setText(message.getDescription(),dontSendNotification);
     }
     
     void handleNoteOn (MidiKeyboardState*, int midiChannel, int midiNoteNumber, float velocity) override
     {
-        if (! isAddingFromMidiInput)
+
+        MidiMessage message (MidiMessage::noteOn (midiChannel, midiNoteNumber, velocity));
+        message.setTimeStamp (Time::getMillisecondCounterHiRes() * 0.001);
+        midiCollector.addMessageToQueue (message);
+
+        
+        //update time for waveform
+        SamplerPage* samplerpage = static_cast<SamplerPage*> (tabs.getCurrentContentComponent () );
+        
+        
+        if (samplerpage->selected_slot+36 == midiNoteNumber)
         {
-            MidiMessage message (MidiMessage::noteOn (midiChannel, midiNoteNumber, velocity));
-            message.setTimeStamp (Time::getMillisecondCounterHiRes() * 0.001);
-            midiCollector.addMessageToQueue (message);
+            samplerpage->start_timer();
+            synth.midiNoteNumber_playing=midiNoteNumber;
         }
     }
     
     void handleNoteOff (MidiKeyboardState*, int midiChannel, int midiNoteNumber, float /*velocity*/) override
     {
-        if (! isAddingFromMidiInput)
+
+        MidiMessage message (MidiMessage::noteOff (midiChannel, midiNoteNumber));
+        message.setTimeStamp (Time::getMillisecondCounterHiRes() * 0.001);
+        midiCollector.addMessageToQueue (message);
+        
+        
+        if ((tabs.getCurrentTabIndex()==0) && (synth.midiNoteNumber_playing==midiNoteNumber))
         {
-            MidiMessage message (MidiMessage::noteOff (midiChannel, midiNoteNumber));
-            message.setTimeStamp (Time::getMillisecondCounterHiRes() * 0.001);
-            midiCollector.addMessageToQueue (message);
+            SamplerPage* samplerpage = static_cast<SamplerPage*> (tabs.getCurrentContentComponent () );
+            samplerpage->stop_timer();
         }
+    }
+    
+    void finished(URL::DownloadTask *task,bool 	success) override
+    {
+        progress+=1./8.;
+        
+        for (int indice=0;indice<8;indice++)
+        {
+            if (task==tache[indice])
+            {
+                Logger::outputDebugString(String::formatted ("Load sample%d",indice));
+            }
+        }
+        
+        if (progress>=1.)
+        {
+          synth.loadKit();
+        }
+
     }
     
     
     //==============================================================================
     AudioDeviceManager audioDeviceManager;         // [3]
-    MidiKeyboardState keyboardState;
-    MidiKeyboardComponent keyboardComponent;
     DrumSynthesiser synth;
-    MidiMessageCollector midiCollector;
     Label midinote_label;
- 
     TabbedComponent tabs;
+    ComboBox combobox_kit;
+    ProgressBar progressbar;
     bool isAddingFromMidiInput;
+    double progress;
+    MidiKeyboardState keyboardState;
+    MidiMessageCollector midiCollector;
+    CustomMidiKeyboardComponent keyboardComponent;
 
+    double startTime;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MainComponent)
 };
