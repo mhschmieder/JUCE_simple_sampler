@@ -151,8 +151,8 @@ public:
             if (!audioFile.exists())
             {
                 //If file does not exist -> download file
-                URL url=URL::URL(String::formatted ("https://s3-eu-west-1.amazonaws.com/choqueuse/drumheaven/kit%d/Tranche%d.aif",num_kit, index));
-                InputStream* test= url.createInputStream(1);
+                URL url{String::formatted ("https://s3-eu-west-1.amazonaws.com/choqueuse/drumheaven/kit%d/Tranche%d.aif",num_kit, index)};
+                std::unique_ptr<InputStream> test= url.createInputStream(1);
                 if (test != nullptr)
                 {
                     Logger::outputDebugString("Load Downloaded File");
@@ -190,7 +190,7 @@ public:
         }
     }
         
-    URL::DownloadTask *tache[8];
+    std::unique_ptr<URL::DownloadTask> tache[8];
 
 private:
     //==============================================================================
@@ -235,13 +235,13 @@ private:
         }
     }
     
-    void finished(URL::DownloadTask *task,bool 	success) override
+    void finished(URL::DownloadTask *task, bool success) override
     {
         progress+=1./8.;
         
         for (int indice=0;indice<8;indice++)
         {
-            if (task==tache[indice])
+            if (task==tache[indice].get())
             {
                 Logger::outputDebugString(String::formatted ("Load sample%d",indice));
             }

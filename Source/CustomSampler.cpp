@@ -43,8 +43,8 @@ void CustomSamplerSound::loadSound()
     {
         Logger::outputDebugString(String("does not exist")+audioFile.getFileName());
     }
-    ScopedPointer<AudioFormatReader> source;
-    source=AIFF_file.createReaderFor(audioFile.createInputStream(),false);
+    
+    AudioFormatReader* source = AIFF_file.createReaderFor(audioFile.createInputStream().get(),false);
  
     sourceSampleRate = source->sampleRate;
     sample_length=source->lengthInSamples;

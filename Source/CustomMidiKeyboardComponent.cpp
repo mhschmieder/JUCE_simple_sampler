@@ -518,7 +518,7 @@ void CustomMidiKeyboardComponent::timerCallback()
     {
         const Array<MouseInputSource>& mouseSources = Desktop::getInstance().getMouseSources();
         
-        for (MouseInputSource* mi = mouseSources.begin(), * const e = mouseSources.end(); mi != e; ++mi)
+        for (const MouseInputSource* mi = mouseSources.begin(), * const e = mouseSources.end(); mi != e; ++mi)
             if (mi->getComponentUnderMouse() == this || isParentOf (mi->getComponentUnderMouse()))
                 updateNoteUnderMouse (getLocalPoint (nullptr, mi->getScreenPosition()).roundToInt(), mi->isDragging(), mi->getIndex());
     }

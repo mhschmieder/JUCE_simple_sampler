@@ -154,7 +154,8 @@ void SamplerPage::comboBoxChanged (ComboBox* combobox)
     if (combobox==&bankcomboBox.comboBox)
     {
         selected_slot=combobox->getSelectedId()-1;
-        sampler_sound= dynamic_cast<CustomSamplerSound*> (synth.getSound(selected_slot));
+        CustomSamplerSound* sound{ dynamic_cast<CustomSamplerSound*> (synth.getSound(selected_slot).get()) };
+        sampler_sound = sound;
         Logger::outputDebugString(sampler_sound->audioFile.getFullPathName());
         samplecomboBox.comboBox.setSelectedItemIndex(sampler_sound->sample_index,dontSendNotification);
         dialp.slider.setValue(sampler_sound->detune,dontSendNotification);
@@ -173,7 +174,8 @@ void SamplerPage::comboBoxChanged (ComboBox* combobox)
         String filename=String::formatted ("kit%d/mysample%d.aif",synth.num_kit,selected_sample+1);
         File audioFile = File::getSpecialLocation (File::userApplicationDataDirectory).getChildFile (filename);
             
-        sampler_sound= dynamic_cast<CustomSamplerSound*> (synth.getSound(selected_slot));
+        CustomSamplerSound* sound{ dynamic_cast<CustomSamplerSound*> (synth.getSound(selected_slot).get()) };
+        sampler_sound = sound;
         sampler_sound->sample_index=selected_sample+1;
         sampler_sound->audioFile=audioFile;
         sampler_sound->loadSound();

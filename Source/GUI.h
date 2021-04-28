@@ -176,7 +176,7 @@ private Button::Listener
     CustomComboBox samplecomboBox,filter_comboBox,bankcomboBox;
     CustomToggleButton filter_button;
     AudioThumbnail* thumbnail;
-    CustomSamplerSound *sampler_sound;
+    CustomSamplerSound* sampler_sound;
     PadLookAndFeel padLookAndFeel;
     
     double startTime;

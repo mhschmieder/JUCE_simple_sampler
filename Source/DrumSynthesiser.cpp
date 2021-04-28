@@ -64,7 +64,8 @@ void DrumSynthesiser::loadKit()
     Logger::outputDebugString("DrumSynth_loadsound");
     for (int i = 0; i < nb_samples; i++)
     {
-        CustomSamplerSound *sound= dynamic_cast<CustomSamplerSound*> (getSound(i));
+        SynthesiserSound::Ptr synthSound = getSound(i);
+        CustomSamplerSound* sound{ dynamic_cast<CustomSamplerSound*> (synthSound.get()) };
         File audioFile = File::getSpecialLocation(File::userApplicationDataDirectory).getChildFile (String::formatted("kit%d/mysample%d.aif",num_kit,i+1));
         Logger::outputDebugString(audioFile.getFullPathName());
         sound->sample_index=i;
